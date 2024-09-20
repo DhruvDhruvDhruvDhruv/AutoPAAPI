@@ -4,6 +4,8 @@ import time
 import os
 import pickle
 import json
+import configparser
+import requests
 
 # parser = argparse.ArgumentParser(
 #                     prog='VoiceToAction',
@@ -38,9 +40,26 @@ def get_completion(client, prompt, model="gpt-3.5-turbo"):
 
     return response
 
+def config_load(filename):
+    config = configparser.ConfigParser()   
+    config.read(os.path.join(os.getcwd(), filename))
+    return config
+
 if __name__ == "__main__":
     loadfromfile = True
-    # conf = set_up_args()
+    conf = config_load("DK_AutoPAAPI.conf")
+    url = 'https://api.todoist.com/rest/v2/tasks'
+    headers = {
+    'Authorization': f'Bearer {conf["API-connect"]["todoist-api-key"]}',
+    'Content-Type': 'application/json'
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        print(response.json())  # Returns the list of tasks
+    except Exception as error:
+        print(error)
+
+if False:
     f = open("C:\\Users\\Dhruv\\OAIVTAKey.key", "r")
     lines = f.readlines()
     f.close()
@@ -49,6 +68,7 @@ if __name__ == "__main__":
     api_key=lines[0])
     if not loadfromfile:
         prompt = "I am going to feed you a block of text. From this, identify all actionable steps and list them. Then find all notable information and list those separately. \
+                If I mention a specific date or time for an event, give me a list of dicts of items with a name_of_event, datetime_of_start and duration in hours (default 1 hour).\
                 In a separate section, identify my overall mood from this text and write it in a short sentence. \
                 Output all of these in a json format. This is the following text to analyse:\n\n"
         stt_file = open(os.path.join(os.getcwd(), "testdata\\test_voice_HV60Beau.txt"), "r")
